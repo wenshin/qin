@@ -1,0 +1,13 @@
+{
+  "name": "qin",
+  "version": "0.1.0",
+  "description": "a app flow for browser inspired by koa",
+  "main": "index.js",
+  "repository": "https://github.com/wenshin/qin",
+  "author": "yuanwen",
+  "license": "MIT",
+  "dependencies": {
+    "koa-compose": "^4.0.0",
+    "typescript": "^2.4.1"
+  }
+}
