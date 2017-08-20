@@ -18,9 +18,13 @@ function emitterMixin(App) {
       } else {
         throw TypeError('app.use(handler, name) or app.use({handler, name}) handler must be a function');
       }
-      this._middlewares.push(
-        this.wrapMiddleware(middleware)
-      );
+      if (this._dev) {
+        this._middlewares.push(
+          this.wrapMiddleware(middleware)
+        );
+      } else {
+        this._middlewares.push(middleware.handler);
+      }
       return this;
     },
 
@@ -28,15 +32,15 @@ function emitterMixin(App) {
       const {handler, name} = middleware;
       const {MIDDLEWARE_IN, MIDDLEWARE_OUT} = this.events;
       return (ctx, next) => {
-        this._dev && this.emit(MIDDLEWARE_IN, name, ctx);
+        this.emit(MIDDLEWARE_IN, name, ctx);
         return handler(ctx, next)
           .then((data) => {
-            this._dev && this.emit(MIDDLEWARE_OUT, name, ctx);
+            this.emit(MIDDLEWARE_OUT, name, ctx);
             return data;
           }, (err) => {
             err.middleware = name;
             ctx.error = err;
-            this._dev && this.emit(MIDDLEWARE_OUT, name, ctx);
+            this.emit(MIDDLEWARE_OUT, name, ctx);
             return Promise.reject(err);
           });
       };

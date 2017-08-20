@@ -46,8 +46,8 @@ function dispatchMixin(App) {
 
           // if event.abort() called and emit context event error,
           // do not trigger context event
-          if (!(err.name !== exception.EVENT_ABORT)
-            && !(err.name !== exception.CONTEXT_EMIT)
+          if (err.name !== exception.EVENT_ABORT
+            && err.name !== exception.CONTEXT_EMIT
           ) {
             try {
               this.emitContext(context);

@@ -17,7 +17,7 @@ function initMixin(App) {
       this.__bux = true;
 
       // location is empty before init event
-      this.location = this.initLocation();
+      this.location = options.location || this.initLocation();
       // always save global data, like user info, permissions
       this.state = options.state || {};
       // some methos for state

@@ -17,25 +17,26 @@ function listenMixin(App) {
     },
 
     _listen(eventName, cb, method) {
-      const args = {eventName, cb};
-      if (typeof eventName === 'function') {
-        args.cb = eventName;
-        args.eventName = '';
-      }
+      const args = getArgs(eventName, cb);
       assertListen(args.cb, args.eventName, 'listen');
       this[method](args.eventName ? `context:${args.eventName}` : 'context', args.cb);
     },
 
     unlisten(eventName, cb) {
-      const args = {eventName, cb};
-      if (typeof eventName === 'function') {
-        args.cb = eventName;
-        args.eventName = '';
-      }
+      const args = getArgs(eventName, cb);
       assertListen(args.cb, args.eventName, 'unlisten');
       this.off(args.eventName ? `context:${args.eventName}` : 'context', args.cb);
     }
   });
+}
+
+function getArgs(eventName, cb) {
+  const args = {eventName, cb};
+  if (typeof eventName === 'function') {
+    args.cb = eventName;
+    args.eventName = '';
+  }
+  return args;
 }
 
 function assertListen(cb, eventName, method) {
