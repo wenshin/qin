@@ -37,7 +37,7 @@ class HashHistory extends History {
   _push(location) {
     const hash = getHash(location);
     this.hashStackMap[hash] = this._cur;
-    util.g.location.hash = hash;
+    util.location.hash = hash;
     util.setDocumentTitle(location.title);
   }
 }

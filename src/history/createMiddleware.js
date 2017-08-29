@@ -1,12 +1,12 @@
-const historyLib = require('./history');
+const createBrowserHistory = require('./createBrowserHistory');
+const Location = require('./Location');
 
-const Location = historyLib.Location;
-const NEW_LOCATION = '$qin-router.location.new';
-const SAME_LOCATION = '$qin-router.location.same';
+const NEW_LOCATION = '$qin-history.location.new';
+const SAME_LOCATION = '$qin-history.location.same';
 
 // os, app, container, device, location
-function createHistory(app, historyArg) {
-  const history = historyArg || historyLib.createBrowserHistory(app._emitter);
+function createMiddleware(app, historyArg) {
+  const history = historyArg || createBrowserHistory(app._emitter);
 
   history.on('location', (location) => {
     dispatchLocation(app, 'replace', location);
@@ -49,7 +49,7 @@ function createHistory(app, historyArg) {
   };
 }
 
-module.exports = createHistory;
+module.exports = createMiddleware;
 
 function extendsApp(app, history) {
   Object.assign(app, {

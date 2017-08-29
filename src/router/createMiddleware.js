@@ -1,21 +1,21 @@
 const compose = require('koa-compose');
 const Router = require('./Router');
 
-const NEW_ROUTER = '$qin-router.router.new';
-const SAME_ROUTER = '$qin-router.router.same';
+const NEW_ROUTER = '$qin-router.new';
+const SAME_ROUTER = '$qin-router.same';
 
 /**
- * [createRouter description]
- * @param  {[type]} options.path         [description]
- * @param  {[type]} options.controller      [description]
- * @param  {[type]} options.onLeave      [description]
- * @param  {[type]} options.routers         [description]
- * @param  {[type]} options.getAsyncRouters [description]
- * @return {[type]}                         [description]
+ * [createMiddleware description]
+ * @param  {String}   options.path         [description]
+ * @param  {Function} options.controller      [description]
+ * @param  {Function} options.onLeave      [description]
+ * @param  {Array}    options.routers         [description]
+ * @param  {Function} options.getAsyncRouters [description]
+ * @return {Function}                         [description]
  */
-function createRouter(app, options) {
+function createMiddleware(app, options) {
   if (!options) {
-    throw new TypeError('createRouter(options) options must be a non empty object');
+    throw new TypeError('createMiddleware(options) options must be a non empty object');
   }
   const router = new Router(options);
 
@@ -38,7 +38,7 @@ function createRouter(app, options) {
   };
 }
 
-module.exports = createRouter;
+module.exports = createMiddleware;
 
 function processRouter(router, ctx) {
   const {event, app, location} = ctx;
@@ -71,17 +71,19 @@ function runControllers(routers, ctx) {
   // 按顺序执行 promise，保证路由优先级顺序
   for (let i = 0; i < routers.length; i++) {
     const router = routers[i];
-    middlewares.push(app.wrapMiddleware({
+    const handler = (context, next) => {
+      context.isPrefixMatch = i < routers.length - 1;
+      context.breadcrumb = {
+        pathname: router.pattern.cut(ctx.location.pathname),
+        title: router.title
+      };
+      return router.controller(context, next);
+    };
+    const middleware = app.dev ? app.wrapMiddleware({
       name: `router:${router.path}`,
-      handler(context, next) {
-        context.isPrefixMatch = i < routers.length - 1;
-        context.breadcrumb = {
-          pathname: router.pattern.cut(ctx.location.pathname),
-          title: router.title
-        };
-        return router.controller(context, next);
-      }
-    }));
+      handler,
+    }) : handler;
+    middlewares.push(middleware);
   }
   return compose(middlewares)(ctx);
 }

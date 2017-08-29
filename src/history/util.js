@@ -1,8 +1,17 @@
+const isNode = typeof process !== 'undefined' && typeof global === 'object';
+
 const util = {
-  g: (0, eval)('this') || {},
+  isNode,
+
+  g() {
+    if (isNode) {
+      return global;
+    }
+    return window;
+  },
 
   get location() {
-    return util.g.location || {replace() {}};
+    return util.g.location || {reload() {}, replace() {}};
   },
 
   get history() {

@@ -18,7 +18,7 @@ function emitterMixin(App) {
       } else {
         throw TypeError('app.use(handler, name) or app.use({handler, name}) handler must be a function');
       }
-      if (this._dev) {
+      if (this.dev) {
         this._middlewares.push(
           this.wrapMiddleware(middleware)
         );

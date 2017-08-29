@@ -1,31 +1,31 @@
 const util = require('../util');
+const Location = require('../Location');
 
 module.exports = initMixin;
 
-const INIT = '$bux.init';
-const MIDDLEWARE_IN = '$bux.middleware.in';
-const MIDDLEWARE_OUT = '$bux.middleware.out';
+const APP_INIT = '$qin.appinit';
+const MIDDLEWARE_IN = '$qin.middleware.in';
+const MIDDLEWARE_OUT = '$qin.middleware.out';
 
 function initMixin(App) {
   Object.assign(App.prototype, {
     _initInstance(options) {
       // if dev mode will not emit some verbose events, like middleware stack
-      this._dev = options.dev;
+      this.dev = options.dev;
       this._emitter = options.emitter;
       this._middlewares = [];
       this._initialized = false;
       this.__bux = true;
 
-      // location is empty before init event
-      this.location = options.location || this.initLocation();
+      this.location =  new Location(options.location || util.location);
       // always save global data, like user info, permissions
       this.state = options.state || {};
-      // some methos for state
+      // some methods for state
       this.methods = options.methods || {};
 
       // event constants
       this.events = Object.assign({
-        INIT,
+        APP_INIT,
         MIDDLEWARE_IN,
         MIDDLEWARE_OUT
       }, options.events);
@@ -41,20 +41,8 @@ function initMixin(App) {
 
     init() {
       return this
-        .dispatch(INIT)
+        .dispatch(APP_INIT)
         .then(() => (this._initialized = true));
-    },
-
-    initLocation() {
-      // 必须用 Object.assign 复制一份 location
-      // 浏览器的 location 重新给 href 复制会刷新页面
-      const location = Object.assign({}, util.location);
-      location.href = decodeURIComponent(location.href);
-      location.search = decodeURIComponent(location.search);
-      location.query = util.parseQuery(location.search);
-      location.path = location.pathname + location.search;
-      location.state = {};
-      return location;
     }
   });
 }

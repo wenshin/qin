@@ -1,4 +1,4 @@
-const Location = require('./Location');
+const Location = require('../Location');
 
 class History {
   /**
