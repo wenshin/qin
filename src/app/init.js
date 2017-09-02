@@ -3,9 +3,11 @@ const Location = require('../Location');
 
 module.exports = initMixin;
 
-const APP_INIT = '$qin.appinit';
-const MIDDLEWARE_IN = '$qin.middleware.in';
-const MIDDLEWARE_OUT = '$qin.middleware.out';
+const APP_INIT = '_appinit';
+const NEW_LOCATION = '_location.new';
+const NEW_VIEW = '_view.new';
+const MIDDLEWARE_IN = '_middleware.in';
+const MIDDLEWARE_OUT = '_middleware.out';
 
 function initMixin(App) {
   Object.assign(App.prototype, {
@@ -26,6 +28,8 @@ function initMixin(App) {
       // event constants
       this.events = Object.assign({
         APP_INIT,
+        NEW_VIEW,
+        NEW_LOCATION,
         MIDDLEWARE_IN,
         MIDDLEWARE_OUT
       }, options.events);

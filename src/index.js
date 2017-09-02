@@ -1,5 +1,6 @@
 const util = require('./util');
 const Event = require('./Event');
+const Location = require('./Location');
 const exception = require('./exception');
 const App = require('./app');
 
@@ -12,6 +13,7 @@ function createApp(...args) {
 qin.util = util;
 qin.App = App;
 qin.Event = Event;
+qin.Location = Location;
 
 qin.exception = exception;
 qin.createApp = createApp;
