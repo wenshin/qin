@@ -19,24 +19,23 @@ class PathPattern {
 
     if (!matched) {
       if (matchPrefix) {
-        const rePrefix = new RegExp(`${regexp.slice(0, -1)}.*$`);
+        const rePrefix = new RegExp(`${regexp.slice(0, -1)}.+$`);
         const matchedPrefix = pathname.match(rePrefix);
         if (matchedPrefix) {
           return {
             match: true,
             prefix: true,
-            params: {}
+            params: getParams(keys, matchedPrefix)
           };
         }
       }
       return {match: false};
     }
 
-    const params = {};
-    for (let i = 0; i < keys.length; i++) {
-      params[keys[i]] = matched[i + 1];
-    }
-    return {params, match: true};
+    return {
+      params: getParams(keys, matched),
+      match: true
+    };
   }
 
   cut(pathnameArg) {
@@ -69,9 +68,10 @@ function removeLastSlash(path) {
   return path.replace(/\/$/, '');
 }
 
-function removeFirstAndLastSlash(pathArg) {
-  const path = removeLastSlash(pathArg);
-  if (path.indexOf('/') === 0) {
-
+function getParams(keys, matched) {
+  const params = {};
+  for (let i = 0; i < keys.length; i++) {
+    params[keys[i]] = matched[i + 1];
   }
+  return params;
 }
