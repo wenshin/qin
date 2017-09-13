@@ -70,7 +70,7 @@ describe('Router', () => {
         }
       }, {
         path: '/user/logout',
-        getAsyncConfig() {
+        getConfigAsync() {
           return Promise.resolve(logoutConfig);
         }
       }]
@@ -83,7 +83,7 @@ describe('Router', () => {
       },
       routers: [{
         path: '/user',
-        getAsyncConfig() {
+        getConfigAsync() {
           return Promise.resolve(userRouterConfig);
         }
       }]

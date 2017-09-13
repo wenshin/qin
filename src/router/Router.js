@@ -1,7 +1,7 @@
 const PathPattern = require('./PathPattern');
 
 class Router {
-  constructor({title, path, routers, getAsyncConfig, controller, onLeave}) {
+  constructor({title, path, routers, getConfigAsync, controller, onLeave}) {
     if (title && typeof title !== 'string') {
       throw new TypeError('Router.constructor({title}) title must be a string');
     }
@@ -18,16 +18,16 @@ class Router {
       throw new TypeError('Router.constructor({onLeave}) onLeave must be a function');
     }
 
-    if (getAsyncConfig && typeof getAsyncConfig !== 'function') {
-      throw new TypeError('Router.constructor({getAsyncConfig}) getAsyncConfig must be a function');
+    if (getConfigAsync && typeof getConfigAsync !== 'function') {
+      throw new TypeError('Router.constructor({getConfigAsync}) getConfigAsync must be a function');
     }
 
     this.title = title;
     this.path = path;
     this.pattern = new PathPattern(path);
-    this.getAsyncConfig = getAsyncConfig;
-    this.hasSubRouters = !!(routers || getAsyncConfig);
-    if (!getAsyncConfig) {
+    this.getConfigAsync = getConfigAsync;
+    this.hasSubRouters = !!(routers || getConfigAsync);
+    if (!getConfigAsync) {
       this.routers = routers ? createRouters(path, routers) : [];
       this.controller = controller;
       this.onLeave = onLeave;
@@ -46,8 +46,8 @@ class Router {
     if (this[prop]) {
       return Promise.resolve(this[prop]);
     }
-    if (this.getAsyncConfig) {
-      return this.getAsyncConfig()
+    if (this.getConfigAsync) {
+      return this.getConfigAsync()
         .then((config) => {
           config && this.updateConfig(config);
           return this[prop];
