@@ -1,7 +1,7 @@
 const PathPattern = require('./PathPattern');
 
 class Router {
-  constructor({title, path, routers, getAsyncRouters, controller, onLeave}) {
+  constructor({title, path, routers, getAsyncConfig, controller, onLeave}) {
     if (title && typeof title !== 'string') {
       throw new TypeError('Router.constructor({title}) title must be a string');
     }
@@ -18,91 +18,109 @@ class Router {
       throw new TypeError('Router.constructor({onLeave}) onLeave must be a function');
     }
 
-    if (getAsyncRouters && typeof getAsyncRouters !== 'function') {
-      throw new TypeError('Router.constructor({getAsyncRouters}) getAsyncRouters must be a function');
+    if (getAsyncConfig && typeof getAsyncConfig !== 'function') {
+      throw new TypeError('Router.constructor({getAsyncConfig}) getAsyncConfig must be a function');
     }
 
     this.title = title;
     this.path = path;
     this.pattern = new PathPattern(path);
-    this.routers = null;
-    this.routerConfigs = routers ? [].concat(routers) : [];
-    this.getAsyncRouters = getAsyncRouters;
-    this.controller = controller;
-    this.onLeave = onLeave;
-    this.hasSubRouters = !!(routers || getAsyncRouters);
-    this.matchCache = {};
+    this.getAsyncConfig = getAsyncConfig;
+    this.hasSubRouters = !!(routers || getAsyncConfig);
+    if (!getAsyncConfig) {
+      this.routers = routers ? createRouters(path, routers) : [];
+      this.controller = controller;
+      this.onLeave = onLeave;
+    }
   }
 
-  async match(ctx) {
-    const {pathname} = ctx.location;
-    let matched = this.matchCache[pathname];
-    if (matched) return matched;
+  updateConfig({title, path, routers, controller, onLeave}) {
+    title && (this.title = title);
+    path && (this.path = path);
+    routers && (this.routers = createRouters(this.path, routers));
+    controller && (this.controller = controller);
+    onLeave && (this.onLeave = onLeave);
+  }
 
-    if (!this.hasSubRouters) {
-      matched = this.pattern.match(pathname);
-    } else {
-      if (!this.routers) {
-        await this.initRouters();
-      }
-      const matchPrefix = true;
-      matched = this.pattern.match(pathname, matchPrefix);
-      if (matched.match && (matched.prefix || !this.controller)) {
-        matched = await this.matchSubRouters(ctx);
-      }
+  getPropertyAsync(prop) {
+    if (this[prop]) {
+      return Promise.resolve(this[prop]);
     }
+    if (this.getAsyncConfig) {
+      return this.getAsyncConfig()
+        .then((config) => {
+          config && this.updateConfig(config);
+          return this[prop];
+        });
+    }
+    return Promise.resolve();
+  }
 
+  match(pathname) {
+    let matched = Router.matchCache[pathname];
+    if (matched) return Promise.resolve(matched);
+
+    matched = this.pattern.match(pathname);
     if (matched.match) {
-      matched.router = matched.router || this;
-      matched.routers = matched.routers || [];
-      this.controller && matched.routers.unshift(this);
-    }
-
-    this.matchCache[pathname] = matched;
-    return matched;
-  }
-
-  async initRouters() {
-    let configs = this.routerConfigs;
-    if (this.getAsyncRouters) {
-      const config = await this.getAsyncRouters();
-      if (config) {
-        configs = configs.concat(config);
-      } else {
-        throw new TypeError('Router.constructor(options) options.getAsyncRouters must be a function return promise which resolves configs');
+      // only cache no params router, when server side render params router will lose control memory
+      if (!this.pattern.hasParams) {
+        Router.matchCache[pathname] = matched;
       }
+      matched.router = this;
+      matched.routers = [this];
+      return Promise.resolve(matched);
     }
-    this.routers = createRouters(this.path, configs);
+
+    // prefix match
+    matched = this.pattern.match(pathname, true);
+    if (!matched.match) {
+      return Promise.resolve({match: false});
+    }
+
+    return this.matchSubRoutersAsync(pathname);
   }
 
-  matchSubRouters(ctx) {
-    let promise;
-    function fulfilled(router) {
-      return (matched) => {
+  matchSubRoutersAsync(pathname) {
+    return this.getPropertyAsync('routers')
+      .then((routers) => {
+        let promise;
+        // 按顺序执行 promise，保证路由优先级顺序
+        for (let i = 0; i < routers.length; i++) {
+          const router = routers[i];
+          promise = promise
+            ? promise.then((matched) => {
+              if (matched.match) {
+                return matched;
+              }
+              return router.match(pathname);
+            })
+            : router.match(pathname);
+        }
+        return promise;
+      })
+      .then((matched) => {
         if (matched.match) {
+          this.controller && matched.routers.unshift(this);
           return matched;
         }
-        return router.match(ctx);
-      };
-    }
-
-    // 按顺序执行 promise，保证路由优先级顺序
-    for (let i = 0; i < this.routers.length; i++) {
-      const router = this.routers[i];
-      promise = promise
-        ? promise.then(fulfilled(router))
-        : router.match(ctx);
-    }
-    return promise;
+        return {match: false};
+      });
   }
 }
+
+Router.matchCache = {};
 
 function createRouters(path, configs) {
   const routers = [];
   for (let i = 0; i < configs.length; i++) {
     const config = configs[i];
-    let newPath = path + config.path;
-    newPath = newPath.replace(/\/{2,}/g, '/');
+    const isAbsolutePath = config.path.indexOf(path) === 0;
+    let newPath;
+    if (isAbsolutePath) {
+      newPath = config.path;
+    } else {
+      newPath = (path + config.path).replace(/\/{2,}/g, '/');
+    }
     const router = new Router(Object.assign({}, config, {path: newPath}));
     routers.push(router);
   }

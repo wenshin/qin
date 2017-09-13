@@ -5,6 +5,7 @@ class PathPattern {
     }
     this.pattern = removeLastSlash(pattern);
     this.paramsConfig = parsePattern(this.pattern);
+    this.hasParams = !!this.paramsConfig.keys.length;
     this.pathLength = this.pattern.split('/').length;
   }
 
