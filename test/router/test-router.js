@@ -50,6 +50,13 @@ describe('Router', () => {
   });
 
   it('async load router', function (done) {
+    const logoutConfig = {
+      title: '登出',
+      path: '/user/logout',
+      controller() {
+        return '/user/logout';
+      }
+    };
     const userRouterConfig = {
       title: '用户',
       controller() {
@@ -62,10 +69,9 @@ describe('Router', () => {
           return '/user/login';
         }
       }, {
-        title: '登出',
         path: '/user/logout',
-        controller() {
-          return '/user/logout';
+        getAsyncConfig() {
+          return Promise.resolve(logoutConfig);
         }
       }]
     };
@@ -86,7 +92,7 @@ describe('Router', () => {
     router.match('/user/logout')
       .then((matched) => {
         const routerMatched = matched.router;
-        const routerExcept = userRouterConfig.routers[1];
+        const routerExcept = logoutConfig;
         assert.equal(routerMatched.path, routerExcept.path);
         assert.equal(matched.routers.length, 3);
         return routerMatched.getPropertyAsync('controller')
