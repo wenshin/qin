@@ -1,27 +1,27 @@
 const compose = require('koa-compose');
 const Router = require('./Router');
+const {EVENTS} = require('../consts');
 
-const NEW_ROUTER = '$qin-router.new';
-const SAME_ROUTER = '$qin-router.same';
+const {NEW_ROUTER, SAME_ROUTER} = EVENTS;
 
 /**
  * [createMiddleware description]
- * @param  {String}   options.path         [description]
+ * @param  {String}   options.path            [description]
  * @param  {Function} options.controller      [description]
- * @param  {Function} options.onLeave      [description]
+ * @param  {Function} options.onLeave         [description]
  * @param  {Array}    options.routers         [description]
- * @param  {Function} options.getAsyncRouters [description]
+ * @param  {Function} options.getConfigAsync [description]
  * @return {Function}                         [description]
  */
-function createMiddleware(app, options) {
+function createMiddleware(options) {
   if (!options) {
     throw new TypeError('createMiddleware(options) options must be a non empty object');
   }
   const router = new Router(options);
 
-  extendsApp(app);
-
   async function routerMiddware(ctx, next) {
+    extendsContext(ctx);
+
     await processRouter(router, ctx);
 
     if (ctx.redirectTo) {
@@ -88,17 +88,12 @@ function runControllers(routers, ctx) {
   return compose(middlewares)(ctx);
 }
 
-function extendsApp(app) {
-  Object.assign(app.events, {
-    NEW_ROUTER,
-    SAME_ROUTER
-  });
-
-  Object.assign(app.constructor.context, {
-    pickBreadcrumb(crumb) {
+function extendsContext(ctx) {
+  if (!ctx.pickBreadcrumb) {
+    ctx.pickBreadcrumb = function pickBreadcrumb(crumb) {
       const {location} = this;
       location.breadcrumbs = location.breadcrumbs || [];
       location.breadcrumbs.push(Object.assign({}, this.breadcrumb, crumb));
     }
-  });
+  }
 }

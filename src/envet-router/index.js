@@ -6,11 +6,11 @@ function register(event, handler) {
 }
 
 register.eventsByName = {};
-register.createEventRouter = createEventRouter;
+register.createMiddleware = createMiddleware;
 
 module.exports = register;
 
-function createEventRouter(eventConfigs) {
+function createMiddleware(eventConfigs) {
   function registerEvent(configArg) {
     const configs = [].concat(configArg);
     Array.prototype.map.call(configs, (config) => {

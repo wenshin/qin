@@ -1,8 +1,8 @@
 const createBrowserHistory = require('./createBrowserHistory');
-const Location = require('./Location');
+const Location = require('../Location');
+const {EVENTS} = require('../consts');
 
-const NEW_LOCATION = '$qin-history.location.new';
-const SAME_LOCATION = '$qin-history.location.same';
+const {NEW_LOCATION, SAME_LOCATION} = EVENTS;
 
 // os, app, container, device, location
 function createMiddleware(app, historyArg) {

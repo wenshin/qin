@@ -1,11 +1,9 @@
-const createHistory = require('./createHistory');
-const createRouter = require('./createRouter');
+const createMiddleware = require('./createMiddleware');
 const PathPattern = require('./PathPattern');
-const history = require('./history');
+const Router = require('./Router');
 
 module.exports = {
-  ...history,
+  Router,
   PathPattern,
-  createHistory,
-  createRouter
+  createMiddleware
 };

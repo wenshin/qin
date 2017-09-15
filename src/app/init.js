@@ -1,11 +1,8 @@
+const {EVENTS} = require('../consts');
 const util = require('../util');
 const Location = require('../Location');
 
 module.exports = initMixin;
-
-const APP_INIT = '$qin.appinit';
-const MIDDLEWARE_IN = '$qin.middleware.in';
-const MIDDLEWARE_OUT = '$qin.middleware.out';
 
 function initMixin(App) {
   Object.assign(App.prototype, {
@@ -24,11 +21,7 @@ function initMixin(App) {
       this.methods = options.methods || {};
 
       // event constants
-      this.events = Object.assign({
-        APP_INIT,
-        MIDDLEWARE_IN,
-        MIDDLEWARE_OUT
-      }, options.events);
+      this.events = Object.assign({}, EVENTS, options.events);
 
       this._debounceTimer = {};
 

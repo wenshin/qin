@@ -24,15 +24,15 @@ const contextProto = {
    * app delegates
    */
   get events() {
-    return this.app.events;
+    return this.$app.events;
   },
 
   get appState() {
-    return this.app.state;
+    return this.$app.state;
   },
 
   get appMethods() {
-    return this.app.methods;
+    return this.$app.methods;
   },
 
   /**
@@ -78,7 +78,7 @@ function contextMixin(App) {
   Object.assign(App.prototype, {
     createContext(event) {
       return Object.create(contextProto, {
-        app: {writable: false, configurable: false, value: this},
+        $app: {writable: false, configurable: false, value: this},
         event: {writable: false, configurable: false, value: event},
         // location is changable, like history middware
         location: {writable: true, value: this.location}
@@ -86,3 +86,5 @@ function contextMixin(App) {
     }
   });
 }
+
+contextMixin.contextProto = contextProto;
