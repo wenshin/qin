@@ -13,7 +13,7 @@ module.exports = register;
 function createMiddleware(eventConfigs) {
   function registerEvent(configArg) {
     const configs = [].concat(configArg);
-    Array.prototype.map.call(configs, (config) => {
+    configs.map((config) => {
       if (config && config.length) {
         registerEvent(config);
       } else {
@@ -25,10 +25,14 @@ function createMiddleware(eventConfigs) {
     registerEvent(eventConfigs);
   }
 
-  async function eventRouter(ctx, next) {
-    const {app, event} = ctx;
-    const configs = [];
+  function eventRouter(ctx, next) {
+    const {$app, event} = ctx;
     const promises = [];
+
+    const runEvent = conf => $app.wrapMiddleware({
+      name: `event:${conf.name}`,
+      handler: conf.handler
+    })(ctx);
 
     event.nameSet.forEach((name) => {
       const eventConfig = register.eventsByName[name];
@@ -39,29 +43,19 @@ function createMiddleware(eventConfigs) {
             .then((config) => {
               eventConfig.getAsyncConfig = null;
               eventConfig.handler = config.handler;
-              configs.push(eventConfig);
+              return runEvent(eventConfig);
             });
           promises.push(promise);
         } else {
-          configs.push(eventConfig);
+          promises.push(eventConfig);
         }
       }
     });
 
     if (promises.length) {
-      await Promise.all(promises);
+      return Promise.all(promises).then(() => next());
     }
-
-    const runEvent = conf => app.wrapMiddleware({
-      name: `event:${conf.name}`,
-      handler: conf.handler
-    })(ctx);
-
-    if (configs.length) {
-      await Promise.all(configs.map(runEvent));
-    }
-
-    await next();
+    return next();
   }
 
   return {

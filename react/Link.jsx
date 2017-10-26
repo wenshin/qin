@@ -1,4 +1,5 @@
 const React = require('react');
+const qin = require('qin');
 
 class Link extends React.PureComponent {
   static propTypes = {
@@ -32,13 +33,15 @@ class Link extends React.PureComponent {
   }
 
   componentDidMount() {
-    if (!this.props.autoActive) {
+    const {autoActive, $app} = this.props;
+    if (!autoActive) {
       $app.listen($app.events.NEW_LOCATION, this.handleNewLocation);
     }
   }
 
   componentWillUnmount() {
-    if (!this.props.autoActive) {
+    const {autoActive, $app} = this.props;
+    if (!autoActive) {
       $app.unlisten($app.events.NEW_LOCATION, this.handleNewLocation);
     }
   }
@@ -52,6 +55,7 @@ class Link extends React.PureComponent {
   onClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    const {$app} = this.props;
     const {to, replace} = this.props;
     const method = replace ? 'replace' : 'push';
     if (typeof to === 'string') {
@@ -68,7 +72,7 @@ class Link extends React.PureComponent {
   }
 }
 
-module.exports = Link;
+module.exports = qin(Link);
 
 function isSameLocatioin(to, location, isExactEqual) {
   let curLoc = to;

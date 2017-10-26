@@ -2,7 +2,7 @@ const assert = require('assert');
 const {Router} = require('src/router');
 
 describe('Router', () => {
-  it('sync router', function(done) {
+  it('sync router', (done) => {
     const routerConfig = {
       title: '首页',
       path: '/',
@@ -41,7 +41,7 @@ describe('Router', () => {
         assert.equal(matched.routers[1].path, routerConfig.routers[0].path);
         assert.equal(matched.routers[2].path, routerConfig.routers[0].routers[0].path);
         return routerMatched.getPropertyAsync('controller')
-          .then(controller => {
+          .then((controller) => {
             assert.equal(controller, routerExcept.controller);
             done();
           });
@@ -49,7 +49,7 @@ describe('Router', () => {
       .catch(done);
   });
 
-  it('async load router', function (done) {
+  it('async load router', (done) => {
     const logoutConfig = {
       title: '登出',
       path: '/user/logout',
@@ -96,7 +96,7 @@ describe('Router', () => {
         assert.equal(routerMatched.path, routerExcept.path);
         assert.equal(matched.routers.length, 3);
         return routerMatched.getPropertyAsync('controller')
-          .then(controller => {
+          .then((controller) => {
             assert.equal(controller, routerExcept.controller);
             done();
           });
