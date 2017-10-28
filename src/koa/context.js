@@ -2,7 +2,7 @@ const App = require('./App');
 const Event = require('../Event');
 const Location = require('../Location');
 const contextMixin = require('../app/context');
-const {EVENTS} = require('../history/consts');
+const {EVENTS} = require('../consts');
 
 const {NEW_LOCATION} = EVENTS;
 

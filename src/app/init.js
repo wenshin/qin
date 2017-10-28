@@ -9,12 +9,8 @@ function initMixin(App) {
     _initInstance(options) {
       // if dev mode will not emit some verbose events, like middleware stack
       this.dev = options.dev;
-      this._emitter = options.emitter;
-      this._middlewares = [];
-      this._initialized = false;
-      this.__bux = true;
+      this.initialized = false;
 
-      this.location =  new Location(options.location || util.location);
       // always save global data, like user info, permissions
       this.state = options.state || {};
       // some methods for state
@@ -23,6 +19,8 @@ function initMixin(App) {
       // event constants
       this.events = Object.assign({}, EVENTS, options.events);
 
+      this._emitter = options.emitter;
+      this._middlewares = [];
       this._debounceTimer = {};
 
       // default pending render delay 500 ms.
@@ -30,12 +28,15 @@ function initMixin(App) {
       this._pendingDelay = typeof options.pendingDelay === 'number'
         ? options.pendingDelay
         : 500;
+
+      Object.defineProperty(this, 'location', {
+        writable: false,
+        value: new Location(options.location || util.location)
+      });
     },
 
     init() {
-      return this
-        .dispatch(APP_INIT)
-        .then(() => (this._initialized = true));
+      return this.dispatch(EVENTS.APP_INIT);
     }
   });
 }

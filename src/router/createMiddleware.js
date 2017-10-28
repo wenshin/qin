@@ -1,8 +1,17 @@
 const compose = require('koa-compose');
 const Router = require('./Router');
 const {EVENTS} = require('../consts');
+const App = require('../app');
 
 const {NEW_ROUTER, SAME_ROUTER} = EVENTS;
+
+Object.assign(App.context, {
+  pickBreadcrumb(crumb) {
+    const {location} = this;
+    location.breadcrumbs = location.breadcrumbs || [];
+    location.breadcrumbs.push(Object.assign({}, this.breadcrumb, crumb));
+  }
+});
 
 /**
  * [createMiddleware description]
@@ -20,8 +29,6 @@ function createMiddleware(options) {
   const router = new Router(options);
 
   async function routerMiddware(ctx, next) {
-    extendsContext(ctx);
-
     await processRouter(router, ctx);
 
     if (ctx.redirectTo) {
@@ -41,13 +48,13 @@ function createMiddleware(options) {
 module.exports = createMiddleware;
 
 function processRouter(router, ctx) {
-  const {event, app, location} = ctx;
-  const {NEW_LOCATION} = app.events;
+  const {event, events, location} = ctx;
+  const {NEW_LOCATION} = events;
 
   return router.match(ctx).then((matched) => {
     if (matched.match) {
       if (event.is(NEW_LOCATION)) {
-        if (matched.router === app.location.router) {
+        if (matched.router === location.router) {
           // 路由没有变化，添加 SAME_ROUTER 别名，
           // 这个事件说明没有变更路由 controller，但是更新了参数
           event.alias(SAME_ROUTER);
@@ -65,7 +72,7 @@ function processRouter(router, ctx) {
 }
 
 function runControllers(routers, ctx) {
-  const {app} = ctx;
+  const {$app} = ctx;
   const middlewares = [];
 
   // 按顺序执行 promise，保证路由优先级顺序
@@ -79,21 +86,11 @@ function runControllers(routers, ctx) {
       };
       return router.controller(context, next);
     };
-    const middleware = app.dev ? app.wrapMiddleware({
+    const middleware = $app.dev ? $app.wrapMiddleware({
       name: `router:${router.path}`,
       handler,
     }) : handler;
     middlewares.push(middleware);
   }
   return compose(middlewares)(ctx);
-}
-
-function extendsContext(ctx) {
-  if (!ctx.pickBreadcrumb) {
-    ctx.pickBreadcrumb = function pickBreadcrumb(crumb) {
-      const {location} = this;
-      location.breadcrumbs = location.breadcrumbs || [];
-      location.breadcrumbs.push(Object.assign({}, this.breadcrumb, crumb));
-    }
-  }
 }

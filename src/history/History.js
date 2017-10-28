@@ -36,23 +36,24 @@ class History {
 
   setLocation(options, idx) {
     this._cur = idx === undefined ? this._cur : (idx || 0);
-    return this._stack[this._cur] = Location.create(options);
+    this._stack[this._cur] = Location.create(options);
+    return this._stack[this._cur];
   }
 
   go(delta) {
-    if (!delta) return;
-    const target = this.cur + delta
+    if (!delta) return null;
+    const target = this.cur + delta;
     const location = this._stack[target];
     if (location) {
       this._cur = target;
       this._jsNavigation = true;
     }
-    this._go(delta)
+    this._go(delta);
     return location;
   }
 
   _go() {
-    return;
+    return this;
   }
 
   forward() {
@@ -73,7 +74,7 @@ class History {
   }
 
   _replace() {
-    return;
+    return this;
   }
 
   push(location) {
@@ -105,7 +106,7 @@ class History {
   }
 
   _push() {
-    return;
+    return this;
   }
 
   isCrossDomain(location) {

@@ -1,6 +1,5 @@
-const {createMiddleware} = require('qin/router');
 
-module.exports = createMiddleware({
+module.exports = {
   path: '/',
   title: '首页',
   controller(ctx, next) {
@@ -21,4 +20,4 @@ module.exports = createMiddleware({
       }
     }
   ]
-});
+};

@@ -33,6 +33,7 @@ class H5History extends History {
 
   _go(delta) {
     util.g.history.go(delta);
+    return this;
   }
 
   _replace(location) {

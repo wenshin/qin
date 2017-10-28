@@ -6,9 +6,8 @@ describe('event router', () => {
     register({
       name: 'test-event',
       handler(ctx, next) {
-        ctx.
         return next();
       }
-    })
+    });
   });
 });

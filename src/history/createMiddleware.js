@@ -1,8 +1,5 @@
 const createBrowserHistory = require('./createBrowserHistory');
 const Location = require('../Location');
-const {EVENTS} = require('../consts');
-
-const {NEW_LOCATION, SAME_LOCATION} = EVENTS;
 
 // os, app, container, device, location
 function createMiddleware(app, historyArg) {
@@ -15,7 +12,13 @@ function createMiddleware(app, historyArg) {
   extendsApp(app, history);
 
   return function historyMiddleware(ctx, next) {
-    const {event} = ctx;
+    Object.defineProperty(ctx, 'history', {
+      writable: false,
+      configurable: false,
+      value: history
+    });
+    const {event, events} = ctx;
+    const {NEW_LOCATION, SAME_LOCATION} = events;
 
     let historyAction;
     if (event.is(NEW_LOCATION)) {
@@ -54,6 +57,11 @@ module.exports = createMiddleware;
 function extendsApp(app, history) {
   Object.assign(app, {
     history,
+
+    get location() {
+      return history.location;
+    },
+
     push(path, query) {
       // options is same to `options` of Location.constructor(options).
       const options = argsToOptions(path, query);
@@ -62,17 +70,11 @@ function extendsApp(app, history) {
         return dispatchLocation(app, 'push', options);
       }
 
-      if (app.location.router && app.location.router.onLeave) {
-        const promise = app.location.router.onLeave(app.location);
+      const location = history.location;
+      if (location.router && location.router.onLeave) {
+        const promise = location.router.onLeave(app.location);
         if (promise && promise.then && promise.catch) {
-          return promise
-            .then(() => dispatch())
-            .catch((err) => {
-              app.emit('error', err);
-              return Promise.reject(err);
-            });
-        } else if (promise) {
-          return dispatch();
+          return promise.then(() => dispatch());
         }
       }
       return dispatch();
@@ -96,15 +98,10 @@ function extendsApp(app, history) {
     }
   });
 
-  Object.assign(app.events, {
-    NEW_LOCATION,
-    SAME_LOCATION
-  });
-
   Object.assign(app.constructor.context, {
     redirect(locationOptions) {
       this.redirectTo = Location.create(locationOptions);
-      this.event.alias(NEW_LOCATION);
+      this.event.alias(this.events.NEW_LOCATION);
       this.historyAction = {
         type: 'push',
         location: this.redirectTo
@@ -114,7 +111,7 @@ function extendsApp(app, history) {
 }
 
 function dispatchLocation(app, type, locationOptions) {
-  return app.dispatch(NEW_LOCATION, {
+  return app.dispatch(app.events.NEW_LOCATION, {
     type,
     location: Location.create(locationOptions)
   });

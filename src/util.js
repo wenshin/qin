@@ -7,7 +7,7 @@ const util = {
   },
 
   get location() {
-    return window.location || {replace() {}};
+    return util.g.location || {replace() {}};
   },
 
   isType,

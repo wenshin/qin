@@ -38,27 +38,28 @@ function dispatchMixin(App) {
       return runMiddlewares(context)
         .then(() => {
           event.fulfill();
+          if (event.is(this.events.APP_INIT)) {
+            this.initialized = true;
+          }
           this.emitContext(context);
           return context;
-        }).catch((err) => {
-          context.error = err;
-          event.reject(err);
-
-          // if event.abort() called and emit context event error,
+        }, (err) => {
+          // if event.abort() called
           // do not trigger context event
-          if (err.name !== exception.EVENT_ABORT
-            && err.name !== exception.CONTEXT_EMIT
-          ) {
-            try {
-              this.emitContext(context);
-            } catch (emitContextErr) {
-              this.emit('error', emitContextErr);
-            }
+          if (err.name !== exception.EVENT_ABORT) {
+            event.reject(err);
+            this.emitContext(context);
           }
-
-          this.emit('error', err);
           // return a resolve result, so will not trigger Uncaught Error (in promise)
           return context;
+        }).catch((err) => {
+          // if emitContext throw error then reject event and throw again
+          if (err.name === exception.CONTEXT_EMIT) {
+            event.reject(err);
+            this.emitContext(err.context);
+            return err.context;
+          }
+          throw err;
         });
     },
 
@@ -74,27 +75,22 @@ function dispatchMixin(App) {
 }
 
 function emitContext(ctx) {
-  const {event, app} = ctx;
-  if (event.name !== app.events.INIT && !app._initialized) return;
+  const {event, events, $app} = ctx;
+  if (!event.is(events.APP_INIT) && !$app.initialized) return;
 
   if (event.status === 'pending') {
-    event.pendingDelay(
-      () => {
-        app.emit('context', ctx);
-        event.each(name => app.emit(`context:${name}`, ctx));
-      },
-      app._pendingDelay
-    );
+    event.pendingDelay(emit, $app._pendingDelay);
   } else {
-    ctx.oldLocation = app.location;
-    app.location = ctx.location;
-
     event.clearPending();
+    emit();
+  }
+
+  function emit() {
     // emit the named event first, cause of the context event always use to mount page,
     // so the named event will not triggered after page mounted immediately
-    event.each(name => app.emit(`context:${name}`, ctx));
+    event.each(name => $app.emit(`context:${name}`, ctx));
 
     // emit all event
-    app.emit('context', ctx);
+    $app.emit('context', ctx);
   }
 }

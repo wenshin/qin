@@ -60,7 +60,7 @@ describe('Router', () => {
     const userRouterConfig = {
       title: '用户',
       controller() {
-        return '/user'
+        return '/user';
       },
       routers: [{
         title: '登录',

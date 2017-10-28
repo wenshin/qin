@@ -16,6 +16,14 @@ const contextProto = {
     return this.event.status === 'fulfilled';
   },
 
+  get isAborted() {
+    return this.event.status === 'aborted';
+  },
+
+  get error() {
+    return this.event.errors[this.event.errors.length - 1];
+  },
+
   set error(val) {
     this.event.errors.push(val);
   },
@@ -27,12 +35,8 @@ const contextProto = {
     return this.$app.events;
   },
 
-  get appState() {
+  get shareState() {
     return this.$app.state;
-  },
-
-  get appMethods() {
-    return this.$app.methods;
   },
 
   /**
@@ -40,10 +44,6 @@ const contextProto = {
    */
   get state() {
     return this.location.state;
-  },
-
-  get methods() {
-    return this.location.methods;
   },
 
   get query() {
@@ -69,6 +69,17 @@ const contextProto = {
   },
   set forbidden(val) {
     this.location.forbidden = val;
+  },
+
+  get initialized() {
+    return this.$app.initialized;
+  },
+
+  /**
+   * methods
+   */
+  dispatch(...args) {
+    return this.$app.dispatch(...args);
   }
 };
 
@@ -81,7 +92,8 @@ function contextMixin(App) {
         $app: {writable: false, configurable: false, value: this},
         event: {writable: false, configurable: false, value: event},
         // location is changable, like history middware
-        location: {writable: true, value: this.location}
+        location: {writable: true, value: this.location},
+        previousLocation: {writable: false, configurable: false, value: this.location},
       });
     }
   });
