@@ -14,11 +14,12 @@ const app = qin.createApp({
   emitter: new Emitter()
 });
 
-app.listen(render);
-app.listen(render);
-
+app.use(init);
 app.use(qinHistory.createMiddleware());
 app.use(qinRouter(router));
 app.use(qinEventRouter(eventRouter));
-app.use(init);
+
+app.listen(render);
+app.listen(logger);
+
 app.init();

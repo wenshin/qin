@@ -28,6 +28,13 @@ function dispatchMixin(App) {
       const event = new Event(name, data, this);
       const context = this.createContext(event);
 
+      // if app not initialized, will set APP_INIT event to it,
+      // so you can set set app.initialized = false to trigger any event to init data again.
+      // it's useful when need reload permission or other cache data without reload page.
+      if (!this.initialized) {
+        event.alias(this.events.APP_INIT);
+      }
+
       // 默认触发 pending 事件
       if (!options || options.pending !== false) {
         // for loading rendering
@@ -38,10 +45,10 @@ function dispatchMixin(App) {
       return runMiddlewares(context)
         .then(() => {
           event.fulfill();
+          this.emitContext(context);
           if (event.is(this.events.APP_INIT)) {
             this.initialized = true;
           }
-          this.emitContext(context);
           return context;
         }, (err) => {
           // if event.abort() called
@@ -53,13 +60,10 @@ function dispatchMixin(App) {
           // return a resolve result, so will not trigger Uncaught Error (in promise)
           return context;
         }).catch((err) => {
-          // if emitContext throw error then reject event and throw again
-          if (err.name === exception.CONTEXT_EMIT) {
-            event.reject(err);
-            this.emitContext(err.context);
-            return err.context;
-          }
-          throw err;
+          // catch all error may trigger by emitContext or others unknown errors
+          event.reject(err);
+          this.emitContext(context);
+          return err.context;
         });
     },
 
@@ -67,7 +71,6 @@ function dispatchMixin(App) {
       try {
         emitContext(context);
       } catch (err) {
-        err.context = context;
         throw exception.createContextEmitException(err);
       }
     }

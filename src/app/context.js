@@ -71,10 +71,6 @@ const contextProto = {
     this.location.forbidden = val;
   },
 
-  get initialized() {
-    return this.$app.initialized;
-  },
-
   /**
    * methods
    */

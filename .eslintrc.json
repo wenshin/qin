@@ -34,6 +34,7 @@
     "import/no-extraneous-dependencies": ["warn", {
       "devDependencies": ["examples/**/*", "test/**/*"]
     }],
+    "array-callback-return": "warn",
     "no-use-before-define": ["error", {"functions": false}],
     "no-param-reassign": "warn",
     "no-restricted-syntax": "off",

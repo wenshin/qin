@@ -38,6 +38,7 @@
     "mocha": "^3.5.3",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
+    "store": "^2.0.12",
     "style-loader": "^0.18.2",
     "todomvc-app-css": "^2.1.0",
     "todomvc-common": "^1.0.4",

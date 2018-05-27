@@ -128,4 +128,29 @@ describe('App', () => {
 
     app.init();
   });
+
+  it('catch error in listen', (done) => {
+    const app = new App({
+      emitter: new EventEmitter()
+    });
+    const err = new Error('test error');
+
+    let isFulfilled = false;
+    app.listen((ctx) => {
+      if (ctx.isFulfilled) {
+        isFulfilled = true;
+        throw err;
+      }
+
+      if (isFulfilled) {
+        assert.ok(ctx.isRejected);
+        assert.equal(ctx.error, err);
+        done();
+      } else {
+        done(new Error('must trigger fulfilled event first'));
+      }
+    });
+
+    app.init();
+  });
 });

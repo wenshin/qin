@@ -12,7 +12,13 @@ module.exports = register;
 
 function createMiddleware(eventConfigs) {
   function registerEvent(configArg) {
-    const configs = [].concat(configArg);
+    let configs;
+    if (configArg instanceof Array) {
+      configs = [].concat(configArg);
+    } else {
+      configs = Object.keys(configArg).map(name => ({name, handler: configArg[name]}));
+    }
+
     configs.map((config) => {
       if (config && config.length) {
         registerEvent(config);
@@ -29,10 +35,14 @@ function createMiddleware(eventConfigs) {
     const {$app, event} = ctx;
     const promises = [];
 
-    const runEvent = conf => $app.wrapMiddleware({
-      name: `event:${conf.name}`,
-      handler: conf.handler
-    })(ctx);
+    const runEvent = conf => (
+      $app.dev
+        ? $app.wrapMiddleware({
+          name: `event:${conf.name}`,
+          handler: conf.handler
+        })(ctx)
+        : conf.handler(ctx)
+    );
 
     event.nameSet.forEach((name) => {
       const eventConfig = register.eventsByName[name];
