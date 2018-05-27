@@ -4,6 +4,12 @@ const Location = require('../Location');
 
 module.exports = initMixin;
 
+const APP_INIT = '_appinit';
+const NEW_LOCATION = '_location.new';
+const NEW_VIEW = '_view.new';
+const MIDDLEWARE_IN = '_middleware.in';
+const MIDDLEWARE_OUT = '_middleware.out';
+
 function initMixin(App) {
   Object.assign(App.prototype, {
     _initInstance(options) {
@@ -17,7 +23,13 @@ function initMixin(App) {
       this.methods = options.methods || {};
 
       // event constants
-      this.events = Object.assign({}, EVENTS, options.events);
+      this.events = Object.assign({
+        APP_INIT,
+        NEW_VIEW,
+        NEW_LOCATION,
+        MIDDLEWARE_IN,
+        MIDDLEWARE_OUT
+      }, options.events);
 
       this._emitter = options.emitter;
       this._middlewares = [];
